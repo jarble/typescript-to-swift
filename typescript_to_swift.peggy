@@ -88,7 +88,7 @@ class_member = a:var_name _ ":" _ b:type {
 access_modifier= "public" / "private"
 
 class_=
-	"type" __ a:var_name _ "=" _ b:type ";" {return "\n#define "+a+" "+b+"\n";}
+	"type" __ a:var_name _ "=" _ b:type ";" {return "typealias "+a+" = "+b+"\n";}
 	/ "class" __ name:var_name type_params:(_ "<" _ type_parameters _ ">" _ / "")  super_class:( _ "extends" _ var_name / "") _ "{" _ a4:class_statements _ "}" {
 		class_name = name;
 		let to_return = "";
@@ -135,7 +135,7 @@ statement_
 		if(t1.length > 0){
 			return_type = t1[2]; 
 		}
-		return return_type+" "+name+"("+b+"){"+c+"}"
+		return "func "+name+"("+b+") -> "+return_type+"{"+c+"}"
 	}
 
 
