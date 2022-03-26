@@ -6,66 +6,66 @@ func Number(_ a:String)->Double?{
 
 class Math{
 	static func sin(_ a:Double)->Double{
-		return Darwin.sin(a)
+		return sin(a)
 	}
 	static func cos(_ a:Double)->Double{
-		return Darwin.cos(a)
+		return cos(a)
 	}
 	static func tan(_ a:Double)->Double{
-		return Darwin.tan(a)
+		return tan(a)
 	}
 	static func asin(_ a:Double)->Double{
-		return Darwin.asin(a)
+		return asin(a)
 	}
 	static func acos(_ a:Double)->Double{
-		return Darwin.acos(a)
+		return acos(a)
 	}
 	static func atan(_ a:Double)->Double{
-		return Darwin.atan(a)
+		return atan(a)
 	}
 	static func round(_ a:Double)->Double{
-		return Darwin.round(a)
+		return round(a)
 	}
 	static func floor(_ a:Double)->Double{
-		return Darwin.floor(a)
+		return floor(a)
 	}
 	static func ceil(_ a:Double)->Double{
-		return Darwin.ceil(a)
+		return ceil(a)
 	}
 	static func trunc(_ a:Double)->Double{
-		return Darwin.trunc(a)
+		return trunc(a)
 	}
 	static func abs(_ a:Double)->Double{
-		return Darwin.abs(a)
+		return abs(a)
 	}
 	static func exp(_ a:Double)->Double{
-		return Darwin.exp(a)
+		return exp(a)
 	}
 	static func log(_ a:Double)->Double{
-		return Darwin.log(a)
+		return log(a)
 	}
 	static func log10(_ a:Double)->Double{
-		return Darwin.log10(a)
+		return log10(a)
 	}
 	static func sqrt(_ a:Double)->Double{
-		return Darwin.sqrt(a)
+		return sqrt(a)
 	}
 	static func pow(_ a:Double,_ b:Double)->Double{
-		return Darwin.pow(a,b)
+		return pow(a,b)
 	}
 	static func min(_ a:Double, _ b:Double)->Double{
-		return Darwin.min(a,b)
+		return min(a,b)
 	}
 	static func max(_ a:Double, _ b:Double)->Double{
-		return Darwin.max(a,b)
+		return max(a,b)
 	}
-	static func random(_ a:Double)->Double{
-		return Double.random(in: 2.71828...3.14159)
+	static func random()->Double{
+		return Double.random(in: 0.0...1.0)
 	}
 }
 
 class console{
-	static func log(_ s: String) {
+	static func log<T>(_ s: T) {
 		print(s,terminator:"\n")
 	}
 }
