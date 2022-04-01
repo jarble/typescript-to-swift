@@ -41,10 +41,23 @@ statements = head:statement tail:(_ statement)* {
       }, head);
     }
 
-interface_statements = head:function_parameter ";" tail:(_ function_parameter _ ";")* {
+interface_statement = name:var_name _ type_params:("<" _ type_parameters _ ">" _ / "") "(" _ b:function_parameters _ ")" _ t1:(":" _ type _ / "") {
+		let return_type = "Object";
+		let type_params_string = "";
+		if(t1.length > 0){
+			return_type = t1[2]; 
+		}
+		if(type_params.length > 0){
+			type_params_string = "<"+type_params[2]+">";
+		}
+		return "func " + name+type_params_string+"("+b+")->"+return_type;
+	}
+	/ function_parameter
+
+interface_statements = head:interface_statement ";" tail:(_ interface_statement _ ";")* {
       return tail.reduce(function(result, element) {
-        return result + element[1] + ";";
-      }, head);
+        return result +";"+ element[1];
+      }, head)+";";
     }
     
 class_statements = head:class_statement tail:( _ class_statement)* {
@@ -89,21 +102,30 @@ access_modifier= "public" / "private"
 
 class_=
 	"type" __ a:var_name _ "=" _ b:type ";" {return "typealias "+a+" = "+b+"\n";}
-	/ "class" __ name:var_name type_params:(_ "<" _ type_parameters _ ">" _ / "")  super_class:( _ "extends" _ var_name / "") _ "{" _ a4:class_statements _ "}" {
+	/ is_abstract:("abstract" _  / "") "class" __ name:var_name type_params:(_ "<" _ type_parameters _ ">" _ / "")  super_class:( _ "extends" _ var_name / "") class_implements:( _ "implements" _ var_name / "") _ "{" _ a4:class_statements _ "}" {
 		class_name = name;
 		let to_return = "";
 		let class_body = a4(name);
+		let type_params_string = "";
+		let superclass_string = "";
+		let implements_string = "";
+		let abstract_string = "";
+		if(is_abstract.length > 0){
+			is_abstract = "abstract ";
+		}
 		if(super_class.length > 0){
-			class_body = "usingnamespace "+super_class[3]+";"+a4(name);
+			superclass_string = ":"+super_class[3];
 		}
-		if(type_params.length === 0){
-			to_return = "const "+name+" = struct{"+class_body+"};";
+		if(class_implements.length > 0){
+			implements_string = class_implements[3];
 		}
-		else{
-			to_return = "fn "+name+"("+type_params[3]+") type {return struct {"+class_body+"};}";
+		if(type_params.length > 0){
+			type_params_string = "<"+type_params[3]+">";
 		}
-		return to_return;
+		return "public "+abstract_string+"class "+name+type_params_string+superclass_string+implements_string+"{"+class_body+"};";
 	}
+	/ "interface" __ name:var_name type_params:(_ "<" _ type_parameters _ ">" _ / "")  super_class:( _ "extends" _ var_name / "") _ "{" _ a:interface_statements _ "}"
+	{ return "protocol "+name+"{"+a+"}";}
 
 statement =
 	a1:statement_ {return a1;}
@@ -135,14 +157,18 @@ statement_
 		if(t1.length > 0){
 			return_type = t1[2]; 
 		}
+		if(type_params.length > 0){
+			return "func "+name+"<"+type_params[2]+">("+b+") "+return_type+"{"+c+"}"
+		}
 		return "func "+name+"("+b+") -> "+return_type+"{"+c+"}"
 	}
+	
 
 
 type_parameters = head:type tail:(_ (',') _ type)* {
       return tail.reduce(function(result, element) {
-        return result + ",comptime " + element[3]+":type";
-      }, "comptime "+head+":type");
+        return result + "," + element[3];
+      }, head);
     }
 
 identifiers = head:var_name tail:(_ (',') _ var_name)* {
@@ -163,6 +189,8 @@ case_statements= a1:case_statements_ a2:(_ default_statement / "") {return a1+a2
 
 default_statement = "default" _ ":" _ a4:statements {return ["default:",a4].join("")}
 
+const_or_var = ("let" / "var") {return "var ";} / "const" {return "let ";}
+
 statement_with_semicolon
    = 
    "return" __ a2:e  {
@@ -172,11 +200,11 @@ statement_with_semicolon
 	}
 		
    / "return"  {return "return";}
-   / ("let" / "var") __ name:var_name _ ":" _ t1:type _ "=" _ val:e {
-		initial_value[name]=function(){return val;}; return t1+" " + name + " = "+val;
+   / v1:const_or_var __ name:var_name _ ":" _ t1:type _ "=" _ val:e {
+		initial_value[name]=function(){return val;}; return v1+" " + name +":" + t1 + " = "+val;
    }
-   / "const" __ name:var_name _ ":" _ t1:type _ "=" _ val:e {
-		initial_value[name]=function(){return val;}; return "const " + " "+t1+" = "+val;
+   / v1:const_or_var __ name:var_name _ "=" _ val:e {
+		initial_value[name]=function(){return val;}; return v1 + name + " = "+val;
    }
    / name:assignable _ a2:"=" _ val:e {
    		initial_value[name]=function(){return val;};
@@ -353,9 +381,14 @@ callable=
 	
 	
 	}
-	/ "function" _ "(" _ params:function_parameters _ ")" _ t1:type _ "{" _ body:statements _ "}" {
-		return "struct{pub fn function(arguments:anytype) "+t1+"{"+params+body+"}}.function"
+	/ "function" _ "(" _ params:function_parameters _ ")" _ ":" _ t1:type _ "{" _ body:statements _ "}" {
+		return "{("+params+") -> "+t1+" in "+body+"}"
 	}
+	
+	/ "function" _ "(" _ params:function_parameters _ ")" _ ":" _ t1:type _ "{" _ body:statements _ "}" {
+		return "{("+params+") -> "+t1+" in "+body+"}"
+	}
+	
 	/ "class" _ super_class:("extends" __ var_name / "") _ "{" _ a4:class_statements _ "}" {
 		if(super_class.length > 0){
 			return "struct{usingnamespace "+super_class[3]+";"+a4(name)+"};";
@@ -386,15 +419,14 @@ dot_expr = head:var_name tail:(_ ('.') _ var_name)* {
     }
 
 
-function_parameter = a1:var_name _ ":" _ t1:type {return [t1+" "+a1];} /
-a1:var_name {return ["var "+a1];}
+function_parameter = a1:var_name _ ":" _ t1:type {return [a1+": "+t1];}
 
 function_parameters = head:function_parameter tail:(_ (',') _ function_parameter)* {
-      return (tail.reduce(function(result, element) {
+      return "_ " + (tail.reduce(function(result, element) {
         return result.concat(element[3]);
       }, head)).map(function(value,index){initial_value[value]=function(){return "arguments["+index+"]";};
 		  //alert(initial_value[value]);
-		  return value;}).join(",");
+		  return value;}).join(", _ ");
     } / "" {return "";}
 
 exprs = head:e tail:(_ (',') _ e)* {
@@ -421,7 +453,7 @@ elif_ = a1:else_if _ "(" _ a3:e _ ")" _ a5:bracket_statements {return "else if("
 
 var_name= name:IDENTIFIER {
 let to_return = "";
-if(name == "this") to_return = "self"; else if(["true","false","undefined","void","break","continue","arguments"].includes(name)) to_return = name; else to_return = (name === "number"?"float":name==="boolean"?"bool":"compiled_"+name);
+if(name == "this") to_return = "self"; else if(["true","false","undefined","void","break","continue","arguments"].includes(name)) to_return = name; else to_return = (name === "string"?"String":name === "number"?"Double":name==="boolean"?"bool":"compiled_"+name);
 if(initial_value[to_return] === undefined){initial_value[to_return] = function(){return to_return;};}
 return to_return;
 }

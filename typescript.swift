@@ -1,10 +1,12 @@
-import Darwin //why doesn't this work with SwiftWasm?
+import Foundation
 
 func Number(_ a:String)->Double?{
    return Double(a)
 }
 
-class Math{
+struct Math{
+	static let PI = Double.pi
+	static let E = exp(1.0)
 	static func sin(_ a:Double)->Double{
 		return sin(a)
 	}
@@ -36,7 +38,7 @@ class Math{
 		return trunc(a)
 	}
 	static func abs(_ a:Double)->Double{
-		return abs(a)
+		return Foundation.abs(a)
 	}
 	static func exp(_ a:Double)->Double{
 		return exp(a)
@@ -44,28 +46,36 @@ class Math{
 	static func log(_ a:Double)->Double{
 		return log(a)
 	}
+    static func log2(_ a:Double)->Double{
+		return Foundation.log2(a)
+	}
 	static func log10(_ a:Double)->Double{
-		return log10(a)
+		return Foundation.log10(a)
+	}
+	static func sign(_ a:Double)->Double{
+		return Foundation.signum(a)
 	}
 	static func sqrt(_ a:Double)->Double{
-		return sqrt(a)
+		return a.squareRoot()
 	}
 	static func pow(_ a:Double,_ b:Double)->Double{
-		return pow(a,b)
+		return Foundation.pow(a,b)
 	}
 	static func min(_ a:Double, _ b:Double)->Double{
-		return min(a,b)
+		return min(a,b) //todo: fix this
 	}
 	static func max(_ a:Double, _ b:Double)->Double{
-		return max(a,b)
+		return max(a,b) //todo: fix this
 	}
 	static func random()->Double{
 		return Double.random(in: 0.0...1.0)
 	}
 }
 
-class console{
+struct console{
 	static func log<T>(_ s: T) {
 		print(s,terminator:"\n")
 	}
 }
+
+console.log(Math.abs(-3.0))
