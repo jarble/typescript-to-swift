@@ -67,7 +67,7 @@ class_statements = head:class_statement tail:( _ class_statement)* {
     }
 
 instance_method = name:var_name _ type_params:("<" _ type_parameters _ ">" _ / "") "(" _ b:function_parameters _ ")" _ t2:(":" _ type _ / "") "{" _ c:statements _ "}" {
-		let t1 = "@TypeOf("+initial_value[returned]()+")";
+		let t1 = "any";
 		if(t2.length > 0){
 			t1 = t2[2];
 		}
@@ -75,7 +75,7 @@ instance_method = name:var_name _ type_params:("<" _ type_parameters _ ">" _ / "
 	}
 
 static_method = "static" __ name:var_name _ type_params:("<" _ type_parameters _ ">" _ / "") "(" _ b:function_parameters _ ")" _ (":" _ t2:type _ / "") "{" _ c:statements _ "}" {
-		let t1 = "@TypeOf("+initial_value[returned]()+")";
+		let t1 = "any";
 		if(t2.length > 0){
 			t1 = t2[2];
 		}
@@ -218,7 +218,7 @@ statement_with_semicolon
    / var_name
 
 
-type =  t1:type_ "[" "]" {return t1+"[]";} / "Array" "<" t1:type_ ">" {return type+"[]";} / type_
+type = "(" _ params:function_parameters _ ")" _ "=>" _ t1:type {return "("+params+")->"+t1}  / t1:type_ "[" "]" {return t1+"[]";} / "Array" "<" t1:type_ ">" {return type+"[]";} / type_
 type_ = name:var_name {return name;}
 types = head:type tail:(_ (',') _ type)* {
       return tail.reduce(function(result, element) {
@@ -419,7 +419,7 @@ dot_expr = head:var_name tail:(_ ('.') _ var_name)* {
     }
 
 
-function_parameter = a1:var_name _ ":" _ t1:type {return [a1+": "+t1];}
+function_parameter = a1:var_name _ ":" _ t1:type {return [a1+": "+t1];} / "..." a1:var_name _ ":" _ t1:type "[]" {return [a1+": "+t1+"..."];} / a1:var_name _ ":" _ t1:type _ "=" _ d:e {return [a1+":"+t1+"="+d];}
 
 function_parameters = head:function_parameter tail:(_ (',') _ function_parameter)* {
       return "_ " + (tail.reduce(function(result, element) {
