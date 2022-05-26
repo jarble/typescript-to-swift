@@ -37,7 +37,7 @@ let timeout = null;
 
 
 
-fetch ("typescript_to_swift.peggy")
+fetch ("https://raw.githubusercontent.com/jarble/typescript-transpilers/main/swift.peggy")
 .then(x => x.text())
 .then(function(y){
 	const parser = peggy.generate(y);
